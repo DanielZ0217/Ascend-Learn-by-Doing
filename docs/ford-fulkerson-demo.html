@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Ford Fulkerson Algorithm</title>
+  <style>
+    @page { size: Letter; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { color: #213731; background: white; font-family: Arial, Helvetica, sans-serif; }
+    .page { width: 8.5in; min-height: 11in; padding: .56in .63in .48in; }
+    .eyebrow { color: #5b8069; font-size: 8.5pt; font-weight: 800; letter-spacing: 1.7px; text-transform: uppercase; }
+    h1 { color: #245846; font-size: 25pt; line-height: 1.05; letter-spacing: -.7px; margin: 8px 0 6px; }
+    .deck { font-size: 11pt; line-height: 1.38; color: #586e60; margin: 0 0 17px; }
+    h2 { color: #245846; font-size: 12.5pt; line-height: 1.1; margin: 16px 0 7px; }
+    p, li { font-size: 9.7pt; line-height: 1.4; margin: 0; }
+    ul, ol { margin: 5px 0 0 20px; padding: 0; }
+    li { padding-left: 3px; margin: 3px 0; }
+    .callout { background: #edf4ed; border-left: 4px solid #245846; border-radius: 6px; padding: 10px 13px; margin: 0 0 13px; }
+    .callout strong { color: #245846; }
+    .network { display: flex; gap: 16px; align-items: center; margin: 7px 0; }
+    .diagram { flex: 0 0 3.55in; height: 1.65in; background: #f8faf7; border: 1px solid #dce8dd; border-radius: 9px; }
+    .edges { flex: 1; padding: 8px 10px; background: #f8faf7; border-radius: 9px; border: 1px solid #dce8dd; }
+    .edges b { display: block; font-size: 8.5pt; color: #245846; margin-bottom: 3px; }
+    .edges div { font-size: 8.8pt; line-height: 1.45; }
+    .row { display: flex; gap: 16px; }
+    .row > div { flex: 1; }
+    pre { background: #213731; color: #f5faf3; border-radius: 7px; padding: 10px 13px; margin: 7px 0 0; font-size: 8.5pt; line-height: 1.42; white-space: pre-wrap; }
+    .mini { color: #5b7062; font-size: 8.7pt; line-height: 1.4; }
+    .practice { background: #f5f1e9; border-radius: 8px; padding: 11px 13px; margin-top: 14px; }
+    .practice h2 { margin-top: 0; }
+    .footer { border-top: 1px solid #dce8dd; margin-top: 15px; padding-top: 7px; display: flex; justify-content: space-between; color: #6c8172; font-size: 8pt; }
+    svg text { font-family: Arial, Helvetica, sans-serif; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="eyebrow">Algorithm study note · Ascend live demo</div>
+    <h1>Ford–Fulkerson Algorithm</h1>
+    <p class="deck">Find the greatest amount that can move from a source to a destination through a network of capacity-limited connections.</p>
+
+    <div class="callout"><p><strong>Picture a traffic spike.</strong> Requests enter through gateways and travel to workers. Each connection has a maximum rate. A flow network can estimate the most traffic that can be routed at once under those fixed limits.</p></div>
+
+    <h2>A small flow network</h2>
+    <div class="network">
+      <svg class="diagram" viewBox="0 0 340 158" role="img" aria-label="Source s connects to A and B, which connect to sink t, with an extra edge from A to B">
+        <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#739682"/></marker></defs>
+        <g stroke="#739682" stroke-width="2.5" fill="none" marker-end="url(#arrow)">
+          <path d="M52 79 L137 38"/><path d="M52 79 L137 119"/><path d="M188 38 L277 79"/><path d="M188 119 L277 79"/><path d="M163 51 L163 105"/>
+        </g>
+        <g fill="#245846"><circle cx="42" cy="79" r="19"/><circle cx="163" cy="30" r="19"/><circle cx="163" cy="127" r="19"/><circle cx="298" cy="79" r="19"/></g>
+        <g fill="white" font-size="16" font-weight="700" text-anchor="middle" dominant-baseline="middle"><text x="42" y="79">s</text><text x="163" y="30">A</text><text x="163" y="127">B</text><text x="298" y="79">t</text></g>
+        <g fill="#213731" font-size="13" font-weight="700"><text x="87" y="46">3</text><text x="87" y="116">2</text><text x="232" y="47">2</text><text x="232" y="116">2</text><text x="171" y="86">1</text></g>
+      </svg>
+      <div class="edges"><b>Edge capacities</b><div>s → A: 3</div><div>s → B: 2</div><div>A → t: 2</div><div>B → t: 2</div><div>A → B: 1</div></div>
+    </div>
+    <p>Send 2 units along <strong>s → A → t</strong>, then 2 along <strong>s → B → t</strong>. Total flow is <strong>4</strong>. It cannot be higher: the two edges entering t have combined capacity 4. This is a maximum flow and a matching minimum cut.</p>
+
+    <div class="row">
+      <div>
+        <h2>How the algorithm works</h2>
+        <ol>
+          <li>Start with zero flow.</li>
+          <li>Build the <strong>residual graph</strong>: unused forward capacity is c − f; a reverse edge has capacity f.</li>
+          <li>Find any s-to-t path with positive residual capacity.</li>
+          <li>Push the smallest residual capacity on that path; update forward and reverse edges.</li>
+          <li>Repeat until no augmenting path remains.</li>
+        </ol>
+      </div>
+      <div>
+        <h2>Why reverse edges matter</h2>
+        <p>A later path may need to undo part of an earlier choice and reroute that flow. Reverse residual edges make that correction possible.</p>
+        <pre>while path exists in residual graph:
+    delta = smallest capacity on path
+    update forward and reverse edges
+    total_flow += delta</pre>
+      </div>
+    </div>
+
+    <div class="practice">
+      <h2>Try it in the simulator</h2>
+      <p>A SaaS team loses worker capacity during a traffic spike. Change <strong>B → t</strong> from 2 to 1. What is the new maximum flow, and which connection is the bottleneck? Explain your answer before writing code.</p>
+      <p class="mini" style="margin-top:7px"><strong>Ask the coach:</strong> “Use this note to explain residual and reverse edges with this network. Then give me a small request-routing task, let me try first, and critique my reasoning.”</p>
+    </div>
+    <p class="mini" style="margin-top:10px"><strong>Scope:</strong> This is a static capacity model. Real systems also need latency, queues, changing demand, failures, and operational checks. With integer capacities, basic Ford–Fulkerson terminates; using breadth-first search for each path gives the Edmonds–Karp variant.</p>
+    <div class="footer"><span>Ford–Fulkerson · one-page study note</span><span>Source → residual paths → maximum flow</span></div>
+  </main>
+</body>
+</html>

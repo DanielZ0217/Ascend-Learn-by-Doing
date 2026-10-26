@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.next-stale-*/
+.next-office-review/
+out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.env*
+!.env.example
+next-env.d.ts
+data/
+infra/milvus/volumes/

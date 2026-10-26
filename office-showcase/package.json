@@ -1,0 +1,24 @@
+{
+  "name": "ascend-office-showcase",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "qa": "node scripts/qa.mjs",
+    "motion": "node scripts/motion.mjs"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/pngjs": "^6.0.5",
+    "@types/three": "0.186.0",
+    "pngjs": "^7.0.0",
+    "typescript": "5.9.3",
+    "vite": "^7.3.7"
+  }
+}

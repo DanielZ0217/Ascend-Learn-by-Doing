@@ -1,0 +1,26 @@
+import assert from "node:assert/strict";
+import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { chromium } from "@playwright/test";
+
+const base = process.env.SHOWCASE_URL ?? "http://127.0.0.1:4188/";
+const directory = fileURLToPath(new URL("../artifacts/visual-review/", import.meta.url));
+await mkdir(directory, { recursive: true });
+const browser = await chromium.launch({ channel: "msedge", headless: true });
+const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, recordVideo: { dir: directory, size: { width: 1280, height: 720 } } });
+const page = await context.newPage();
+await page.goto(base);
+await page.locator("#scene canvas").waitFor();
+await page.waitForTimeout(500);
+await page.locator("#orbit-button").click();
+const before = await page.evaluate(() => window.__THREE_GAME_DIAGNOSTICS__.camera.position);
+await page.waitForTimeout(3600);
+const after = await page.evaluate(() => window.__THREE_GAME_DIAGNOSTICS__.camera.position);
+assert(before.some((value, index) => Math.abs(value - after[index]) > .05), "orbit animation did not move");
+const video = page.video();
+await context.close();
+const target = `${directory}/orbit-and-people.webm`;
+await copyFile(await video.path(), target);
+await writeFile(`${directory}/motion-observation.json`, JSON.stringify({ base, durationMs: 3600, before, after, animation: "auto orbit and subtle coworker gestures" }, null, 2));
+console.log(`Recorded ${target}`);
+await browser.close();

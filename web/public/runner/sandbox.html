@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob:; worker-src blob:; connect-src 'none'; img-src 'none'; style-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Isolated code checks</title>
+</head>
+<body>
+<script>
+(() => {
+  "use strict";
+  const channel = "workplace-code-runner-v1";
+
+  function workerMain() {
+    "use strict";
+    const safePost = self.postMessage.bind(self);
+    const safeStringify = JSON.stringify.bind(JSON);
+    const safeClone = structuredClone.bind(self);
+    const startedAt = performance.now.bind(performance);
+
+    self.onmessage = (event) => {
+      const input = event.data;
+      if (!input || input.type !== "execute") return;
+      const secret = input.secret;
+      const started = startedAt();
+      const logs = [];
+      let logLength = 0;
+      const appendLog = (...parts) => {
+        const line = parts.map((part) => {
+          try { return typeof part === "string" ? part : safeStringify(part); }
+          catch { return "[unprintable value]"; }
+        }).join(" ");
+        if (logLength < 9500) {
+          logs.push(line.slice(0, 9500 - logLength));
+          logLength += line.length;
+        }
+      };
+      const finish = (status, checks) => {
+        safePost({ secret, result: {
+          status, checks, output: logs.join("\n").slice(0, 10000),
+          durationMs: Math.max(0, startedAt() - started),
+        } });
+      };
+
+      try {
+        // The opaque-origin iframe's CSP blocks network access. These guards
+        // make the restriction visible to student code as well.
+        for (const name of ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "Worker", "SharedWorker", "indexedDB", "caches"]) {
+          try { Object.defineProperty(self, name, { value: undefined, writable: false, configurable: false }); } catch {}
+        }
+        const compiled = new Function("console", `${input.code}\nreturn ${input.functionName};`);
+        const solution = compiled({ log: appendLog, warn: appendLog, error: appendLog, info: appendLog });
+        if (typeof solution !== "function") throw new Error(`Define a function named ${input.functionName}.`);
+        const checks = [];
+        for (const check of input.checks) {
+          try {
+            const actual = solution(...safeClone(check.args));
+            if (actual && typeof actual.then === "function") throw new Error("Return a value directly; async solutions are not supported in this exercise.");
+            const actualJson = safeStringify(actual);
+            const expectedJson = safeStringify(check.expected);
+            const passed = actualJson === expectedJson;
+            checks.push({ id: check.id, passed, detail: passed ? "Passed." : `Expected ${expectedJson}; received ${actualJson ?? "undefined"}.`.slice(0, 2000) });
+          } catch (error) {
+            checks.push({ id: check.id, passed: false, detail: String(error instanceof Error ? error.message : error).slice(0, 2000) });
+          }
+        }
+        finish("completed", checks);
+      } catch (error) {
+        appendLog(error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+        finish("error", []);
+      }
+    };
+  }
+
+  let worker = null;
+  addEventListener("message", (event) => {
+    if (event.source !== parent || !event.data || event.data.channel !== channel || event.data.type !== "run") return;
+    const { runId, code, functionName, checks } = event.data;
+    if (typeof runId !== "string" || typeof code !== "string" || typeof functionName !== "string" || !Array.isArray(checks)) return;
+    if (worker) worker.terminate();
+    const secret = crypto.randomUUID();
+    try {
+      const blob = new Blob([`(${workerMain.toString()})();`], { type: "text/javascript" });
+      const url = URL.createObjectURL(blob);
+      worker = new Worker(url);
+      URL.revokeObjectURL(url);
+      worker.onmessage = (reply) => {
+        if (!reply.data || reply.data.secret !== secret) return;
+        parent.postMessage({ channel, type: "result", runId, result: reply.data.result }, "*");
+        worker.terminate(); worker = null;
+      };
+      worker.onerror = () => {
+        parent.postMessage({ channel, type: "result", runId, result: { status: "error", checks: [], output: "Code worker failed.", durationMs: 0 } }, "*");
+        worker.terminate(); worker = null;
+      };
+      worker.postMessage({ type: "execute", secret, code, functionName, checks });
+    } catch {
+      parent.postMessage({ channel, type: "result", runId, result: { status: "unavailable", checks: [], output: "Isolated code execution is unavailable in this browser.", durationMs: 0 } }, "*");
+    }
+  });
+})();
+</script>
+</body>
+</html>

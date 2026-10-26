@@ -1,0 +1,29 @@
+# Local credentials and user/demo data
+**/.env*
+!**/.env.example
+/web/data/
+/web/.run/
+
+# Dependencies, generated builds, caches, and recordings
+**/node_modules/
+**/.next*/
+**/dist/
+**/out/
+**/coverage/
+**/test-results/
+**/playwright-report/
+**/.codegraph/
+**/artifacts/
+**/*.tsbuildinfo
+**/*.log
+/web/oracleJdk-27/
+/web/infra/milvus/volumes/
+/video/captures/
+/video/stills/
+/office-showcase/.openai/
+
+# Reference repositories and local tooling; selected skills live in /skills.
+/everything-claude-code/
+/tools/
+**/.git/
+**/.git.local-backup/

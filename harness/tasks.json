@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "scope_status": "approved",
+  "scope_confirmed_on": "2026-10-24",
+  "decision_round": {
+    "status": "resolved",
+    "document": "docs/DESIGN_DECISIONS.md"
+  },
+  "app_root": "web",
+  "documents": [
+    "AGENTS.md",
+    "README.md",
+    "docs/PRD.md",
+    "docs/BUILD_PLAN.md",
+    "docs/AGENT_HARNESS.md",
+    "docs/STATUS.md",
+    "docs/DESIGN_DECISIONS.md",
+    "docs/PROVIDERS.md",
+    "docs/AGENT_PROCEDURES.md"
+  ],
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "Scaffold the app, canonical contracts, and check commands",
+      "lane": "integration",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": [],
+      "paths": ["web/package.json", "web/package-lock.json", "web/tsconfig.json", "web/next.config.ts", "web/eslint.config.mjs", "web/postcss.config.mjs", "web/src/app/layout.tsx", "web/src/lib/contracts/", "web/.env.example", "web/.gitignore", "web/AGENTS.md", "web/vitest.config.ts", "web/playwright.config.ts"],
+      "acceptance": ["AC-13", "AC-16"],
+      "checks": ["App starts locally; lint, typecheck, test, test:e2e, and build scripts are defined.", "Contracts cover all five roles and all submission kinds; secrets are server-only and missing configuration is explicit."],
+      "evidence": [
+        "2026-10-24: npm.cmd run lint passed with zero warnings; npm.cmd run typecheck passed.",
+        "2026-10-24: npm.cmd test passed 5 tests covering credential redaction, missing configuration, bounded settings, malformed source URLs, and cross-role assignment rejection.",
+        "2026-10-24: npm.cmd run build passed on Next.js 16.4.3 and React 19.3.1.",
+        "2026-10-24: npm.cmd run test:e2e passed 2 Edge checks at 1440x900 and 1280x720; screenshots visually inspected. The sandboxed attempt passed assertions but hung during cleanup; an elevated rerun exited 0.",
+        "Installed shadcn Button/Card/Badge, React Three Fiber/Three.js, Drei, Motion, Monaco, and supporting tools. Patched Monaco's DOMPurify dependency with a 3.4.17 override; npm reported zero known vulnerabilities.",
+        "Created server-only configuration, safe public health status, placeholder .env.local, and canonical learning contracts. No provider credentials from screenshots were used and no paid AI/search calls were made."
+      ]
+    },
+    {
+      "id": "T02",
+      "title": "Company creation and polished interactive office",
+      "lane": "frontend",
+      "status": "done",
+      "owner": "/root/scene",
+      "depends_on": ["T01"],
+      "paths": ["web/src/app/page.tsx", "web/src/app/company/[companyId]/page.tsx", "web/src/app/globals.css", "web/src/components/company/", "web/public/company/"],
+      "acceptance": ["AC-01", "AC-02", "AC-14", "AC-17"],
+      "checks": ["Bank and restaurant presets and a free-text prompt show coherent company setup and five selectable profiles; verify live supervisor generation during integration.", "Inspect setup and office at both PRD sizes; check keyboard selection, reduced motion, and WebGL fallback."],
+      "evidence": [
+        "2026-10-24: Bank, restaurant, software, and free-text creation UI calls POST /api/company, validates and persists the returned blueprint, and offers a clearly labeled demo-company action when live generation fails.",
+        "2026-10-24: 1440x900 setup/office and 1280x720 office screenshots saved in web/test-results/company-*.png. Headless Edge found no page errors; clicking a 3D coworker selected engineering, and all five role routes were present.",
+        "2026-10-24: Keyboard Enter selected a role, reduced motion completed the fixed customer meeting immediately, and a simulated no-WebGL browser showed the accessible coworker-list fallback. Focused ESLint passed; full application lint, typecheck, and 24 tests passed later in integration."
+      ]
+    },
+    {
+      "id": "T03",
+      "title": "Live supervisor, coaching, customer, and review services",
+      "lane": "ai",
+        "status": "done",
+      "owner": "/root/ai",
+      "depends_on": ["T01"],
+      "paths": ["web/src/lib/ai/", "web/src/app/api/company/", "web/src/app/api/learning/", "web/src/app/api/review/", "web/tests/services/ai/"],
+      "acceptance": ["AC-04", "AC-11", "AC-13", "AC-17", "AC-19"],
+      "checks": ["Validate supervisor blueprints, five agent profiles, assignments, conversational turns, and reviews against shared schemas.", "Use T09 retrieval and memory interfaces; never invent source links or report fixture calls as live Meta calls.", "Check missing credentials, provider timeout, invalid response, and instruction-like untrusted content."],
+        "evidence": [
+          "2026-10-24: Implemented Meta Muse Spark Chat Completions adapter with bounded context/output, schema validation, a durable estimated-spend guard at $12, safe provider errors, and labeled fixture mode. The five fixed role profiles/rubrics, offscreen supervisor, mentor/customer turns, submissions, and reviews use shared contracts.",
+            "2026-10-24: Focused AI tests passed 13/13; full TypeScript typecheck and focused AI ESLint passed. Tests cover five role flows, blueprint uniqueness, untrusted source instructions, channel-isolated conversation history, budget/auth/timeout handling, failed-check review integrity, honest all-passing fixture feedback, and three vetted engineering topic templates with executable reference checks.",
+          "2026-10-24: Fixture HTTP smoke: bank company returned five profiles and Neo4j graph recorded; engineering assignment returned three executable checks; coach turn reported Redis memory; failing-check review rated correctness needs-work. Fixture calls were labeled mode=fixture.",
+          "2026-10-24: Live local API smoke on port 3000: Meta supervisor generated a company; engineering assignment returned HTTP 200 after tuning completion limits, with mode=live, Milvus retrieval, live SerpApi sources, and three fixed checks. Mentor teach turn returned HTTP 200 with Redis memory. Live review of deliberately faulty starter code returned HTTP 200 with all three rubric criteria and specific code evidence; no run result was supplied or claimed. All-checks-passing fixture feedback was corrected and regression-tested.",
+            "2026-10-24: Initial live task/review 502s were Meta finish_reason=length at smaller completion caps; task and review now pass with bounded larger caps and minimal reasoning. Live customer voice and all five roles still require T06/T08 integration checks.",
+            "2026-10-24: Engineering topics now select one of three fixed real-world JavaScript tasks: deduplicate retry events, batch requests during overload, or aggregate category totals. Each has its own starter code, rubric, and checks. Live overload task returned HTTP 200 on port 3000 with batchRequests, four checks, Harbor Bank context, and Milvus retrieval; restaurant aggregation fixture returned summarizeByCategory with three checks and Saffron Table context. AI contributes customer impact while the selected technical contract stays fixed."
+        ]
+    },
+    {
+      "id": "T04",
+      "title": "Shared learning workspace, written roles, persistence, and revisions",
+      "lane": "learning-ui",
+      "status": "done",
+      "owner": "/root/workspace",
+      "depends_on": ["T01"],
+      "paths": ["web/src/app/company/[companyId]/role/[roleId]/page.tsx", "web/src/components/learning/", "web/src/lib/session/", "web/tests/session/"],
+      "acceptance": ["AC-03", "AC-10", "AC-11", "AC-12", "AC-14", "AC-18", "AC-19", "AC-20"],
+      "checks": ["Teaching and skip paths reach assignments; PDF/text input, sources, multi-turn coaching, hints, drafts, and role-specific written submissions render.", "Refresh and role switching retain work; reset clears the intended session; revision preserves earlier attempts and rubric.", "Use interface-compatible fixtures for independent UI work; reserve live service verification for integration."],
+      "evidence": [
+        "2026-10-24: Built five-role learning workspace with topic/difficulty choice, teach-first/task-first, per-role mentor chat, customer text exchange, written/code/conversation submissions, stable-rubric review and revision, source display, and PDF/text upload controls.",
+        "2026-10-24: Browser smoke on port 3000 passed all five role paths, pasted learning text upload with uploaded source shown in a grounded product task, two mentor turns, sales/support customer text and review, product/data written review, and engineering revision. Tested in explicitly labeled fixture mode.",
+        "2026-10-24: Browser smoke verified role switching and refresh retain two engineering attempts; local session tests passed 3/3. No horizontal overflow at 1440x900 or 1280x720. Focused eslint and TypeScript typecheck passed; screenshots under web/tests/runner/artifacts/."
+      ]
+    },
+    {
+      "id": "T05",
+      "title": "Embedded engineering editor and isolated JavaScript checks",
+      "lane": "runner",
+      "status": "done",
+      "owner": "/root/workspace",
+      "depends_on": ["T01", "T04"],
+      "paths": ["web/src/components/editor/", "web/src/lib/runner/", "web/public/runner/", "web/tests/runner/"],
+      "acceptance": ["AC-07", "AC-11", "AC-13", "AC-19"],
+      "checks": ["A deliberately faulty solution fails real checks; a corrected solution passes; submission and revision integrate with the workspace.", "Verify timeout recovery, syntax errors, output caps, message validation, and blocked access to app state, storage, and network.", "Never run student code in the app server or main page; a plain Worker is insufficient isolation."],
+      "evidence": [
+        "2026-10-24: Monaco editor integrated in the engineering workspace; code runs in an opaque-origin sandboxed iframe with a restrictive CSP and disposable Worker. Results are schema-validated and passed to /api/review.",
+        "2026-10-24: node tests/runner/browser-smoke.mjs passed real failed/corrected checks, two reviewed attempts, role-switch/refresh persistence, 1280/1440 widths without horizontal overflow, blocked network and app storage access, syntax error, timeout recovery, and output cap.",
+        "2026-10-24: npm.cmd run typecheck, focused eslint, and 3 session tests passed. Screenshots saved under web/tests/runner/artifacts/.",
+        "2026-10-24: Bundled Monaco editor/TypeScript workers as local static assets after Turbopack's automatic worker URL failed; browser smoke then had no Monaco worker errors. npm.cmd run build passed with all routes, and worker regeneration commands are documented in web/public/runner/README.md."
+      ]
+    },
+    {
+      "id": "T06",
+      "title": "Sales/support customer roleplay and spoken practice",
+      "lane": "voice",
+      "status": "done",
+      "owner": "/root/scene",
+      "depends_on": ["T01"],
+      "paths": ["web/src/components/voice/", "web/src/lib/voice/", "web/src/app/api/voice/", "web/tests/voice/"],
+      "acceptance": ["AC-08", "AC-09", "AC-11", "AC-13"],
+      "checks": ["Sales and support create distinct task-specific customers and evaluate the actual conversation.", "Record real voice input/output on the demo browser; check visible transcript, Stop, permission denial, retry, text fallback, and second attempt."],
+      "evidence": [
+        "2026-10-24: Meta WAV multipart contract verified against official Meta API docs. The voice route validates bounded mono 16-bit PCM at 16/24 kHz and keeps credentials server-side.",
+        "2026-10-24: 5 focused voice tests, focused ESLint, and TypeScript typecheck passed. A live 11-second public speech clip returned HTTP 200 from Meta transcription with a 107-character transcript containing the expected topic word. A generated tone correctly yielded a no-speech error.",
+        "2026-10-24: Headless Edge verified no microphone request on mount, explicit permission denial with text fallback, a fake-device Start/Stop recording uploaded WAV and saved a voice-origin student turn, and a customer reply triggered browser speech synthesis.",
+        "2026-10-24: Edge fake microphone played a real public speech WAV through the UI Start/Stop path. Meta transcription returned HTTP 200; the saved voice-origin student turn had 79 characters with the expected speech keyword, and a customer reply turn was saved. No page errors. Physical microphone and audible speaker rehearsal remain for the final demo gate."
+      ]
+    },
+    {
+      "id": "T07",
+      "title": "Sourced learning material and coherent demo scenarios",
+      "lane": "content",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["T01"],
+      "paths": ["web/src/lib/retrieval/catalog.ts", "web/data/sources/", "docs/PROVIDERS.md"],
+      "acceptance": ["AC-01", "AC-05", "AC-06", "AC-09", "AC-10", "AC-18", "AC-23"],
+      "checks": ["Prepare and actually ingest at least one attributable PDF or web resource for each of the five roles, with passage metadata and retrievable IDs.", "Keep cached material and fixtures labeled; confirm source URLs and avoid unsupported company/product claims.", "Prepare sample PDF/text material for upload and retrieval verification; ingestion tooling belongs to T03/T04."],
+      "evidence": [
+        "2026-10-24: downloaded eight attributed public sources covering all five roles, including SBA marketing, CFPB consumer response, and Census visualization PDFs; original files stored in ignored web/data/sources/.",
+        "2026-10-24: extracted and stored 41 curated passages in SQLite and Milvus and 41 matching role/source graph links in Neo4j; all five role assignments returned relevant cited excerpts with retrieval='milvus'.",
+        "2026-10-24: user-style PDF upload yielded five additional company-specific passages with uploaded provenance and Milvus/Neo4j indexing."
+      ]
+    },
+    {
+      "id": "T08",
+      "title": "Integration, visual review, and rehearsed live demo",
+      "lane": "qa-integration",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["T01", "T02", "T03", "T04", "T05", "T06", "T07", "T09"],
+      "paths": ["web/tests/e2e/", "docs/STATUS.md", "docs/DEMO.md", "README.md"],
+      "acceptance": ["AC-01", "AC-02", "AC-03", "AC-04", "AC-05", "AC-06", "AC-07", "AC-08", "AC-09", "AC-10", "AC-11", "AC-12", "AC-13", "AC-14", "AC-15", "AC-16", "AC-17", "AC-18", "AC-19", "AC-20", "AC-21", "AC-22", "AC-23"],
+      "checks": ["Run lint, typecheck, focused tests, browser flows, and production build; record actual results.", "Capture the target screens at both sizes and rehearse reset -> bank -> supervisor profiles -> PDF/text grounding -> engineering revision -> voice sales pitch -> support.", "Check actual Redis, Milvus, and Neo4j operations and retrieval-backed citations; smoke-check remaining roles and restaurant; distinguish live provider evidence from fixtures.", "Coordinate any required source fixes with their owning lane before editing outside this task's boundaries."],
+      "evidence": [
+        "2026-10-24: Final npm.cmd run lint, typecheck, and 26 focused tests passed. Fresh optimized Next.js production build passed after moving aside a OneDrive-locked generated cache.",
+        "2026-10-24: Production Playwright test:e2e passed 2/2 at 1440 and 1280 widths: fixture company, office selection, sourced engineering assignment, and executed checks. Browser smoke passed five roles, uploaded grounding, customer text, written reviews, engineering revisions, persistence, code isolation, timeout, and recovery.",
+        "2026-10-24: Live Meta API smoke passed task, coaching, and review for all five roles; sales/support passed live customer conversation. All retrieved Milvus sources; engineering used live SerpApi research. Live browser voice with a public speech sample yielded a Meta transcript and customer speech synthesis. Physical presentation-device audio remains a rehearsal check.",
+        "2026-10-24: check:services passed with Redis PONG and a coach key; Milvus 52 rows; Neo4j 19 companies, 52 role-source links, and 315 task-source paths; SQLite 15 documents/52 passages. Production server is running at http://127.0.0.1:3000; docs/DEMO.md describes start and recovery."
+      ]
+    },
+    {
+      "id": "T09",
+      "title": "Local Redis, Milvus, Neo4j, PDF ingestion, and retrieval adapters",
+      "lane": "knowledge-infra",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["T01"],
+      "paths": ["web/infra/", "web/src/lib/retrieval/", "web/src/lib/storage/", "web/src/lib/memory/", "web/src/lib/graph/", "web/src/app/api/materials/", "web/src/app/api/admin/seed/", "web/scripts/check-services.mjs"],
+      "acceptance": ["AC-05", "AC-06", "AC-13", "AC-18", "AC-20", "AC-21", "AC-22", "AC-23"],
+      "checks": ["Prove Redis stores isolated role/company turns and survives the intended refresh path.", "Prove Milvus returns vectors for real ingested passages and Neo4j answers an actual company/task/source traversal.", "Prove PDF/text ingestion and five-role corpus metadata preserve citations and fail clearly when a service is unavailable."],
+      "evidence": [
+        "2026-10-24: Redis Open Source PONG, Neo4j Community running, Milvus standalone healthy; all three configured for local restart.",
+        "2026-10-24: eight public resources produced 41 curated passages; an uploaded PDF produced five more. Milvus vector search returned five cited passages for each of five role topics. SQLite holds 9 documents/46 passages.",
+        "2026-10-24: Redis retained a company/role coach key; Neo4j query found company/role/task/source paths and 46 role/source links. Milvus flush confirmed persisted index rows. `npm.cmd run check:services` exited 0."
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "Elastic coworker selection and living office UI",
+      "lane": "ui-redesign",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["T02", "T08"],
+      "paths": ["web/src/app/company/[companyId]/page.tsx", "web/src/components/company/coworker-selector.tsx", "web/src/components/company/office-scene.tsx", "web/src/app/globals.css", "web/tests/e2e/", "docs/UI_REDESIGN_BRIEF.md", "docs/STATUS.md"],
+      "acceptance": ["AC-02", "AC-14", "AC-24", "AC-25", "AC-26"],
+      "checks": [
+        "Verify mouse and keyboard preview versus confirmation, moving arrow, elastic card/neighbor movement, rapid selection, and all five routes.",
+        "Verify 3D hover/idle/selection response, selected desk, entry/return camera, fixed meeting path, reduced motion, touch, and WebGL fallback.",
+        "Capture and inspect 1440x900, 1280x720, and narrow screenshots; run lint, typecheck, tests, build, and production browser flows without breaking live app behavior."
+      ],
+      "evidence": [
+        "2026-10-24: Motion LayoutGroup/layout/shared layoutId implemented the spring cursor and elastic role cards. Hover/focus/ArrowUp/ArrowDown preview; click/Enter confirm. The selected action remains stable while the pointer crosses other cards.",
+        "2026-10-24: Existing Three.js scene gained subtle character idle/hover/selection reactions, matching work-area highlight, and camera entry/return. The fixed meeting route and all five roles remain.",
+        "2026-10-24: Reviewed final 1440x900, 1280x720, and 390px captures in docs/ui-redesign. Production browser tests passed keyboard and pointer behavior, all five role routes, engineering editor/checks, narrow/reduced-motion flow, and touch selection with WebGL unavailable.",
+        "2026-10-24: npm.cmd run lint, npm.cmd run typecheck, 26 focused tests, optimized npm.cmd run build, and production npm.cmd run test:e2e passed."
+      ]
+    },
+    {
+      "id": "T11",
+      "title": "Detailed orbitable office diorama",
+      "lane": "scene-redesign",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["T10"],
+      "paths": ["web/src/components/company/", "web/src/app/company/[companyId]/page.tsx", "web/src/app/globals.css", "web/tests/e2e/", "docs/PRD.md", "docs/STATUS.md", "docs/DESIGN_DECISIONS.md", "docs/ui-redesign/"],
+      "acceptance": ["AC-27", "AC-28", "AC-29"],
+      "checks": [
+        "Review an original five-zone floor plan against the user reference while preserving the five roles and fixed meeting destination.",
+        "Exercise 360-degree mouse/touch orbit, bounded zoom/tilt, Reset view, wall fade, coworker click/drag distinction, and default-angle return.",
+        "Capture desktop and narrow views; run lint, typecheck, focused tests, production build, and browser flows."
+      ],
+      "evidence": [
+        "2026-10-24: Created an original multi-zone procedural office with named reception, meeting room, product work, engineering/data desks, lounge, kitchenette, and five coworker positions. Company name appears on reception signage.",
+        "2026-10-24: Drei OrbitControls supports full horizontal mouse/touch orbit, bounded tilt/zoom, and Reset view. Exterior wall opacity adapts to camera side; coworker click ignores pointer drags. Enter focuses a role and return eases to the default angle. The customer and sales/support routes reach the meeting room without crossing the table.",
+        "2026-10-24: Inspected production captures at 1440x900, 1280x720, 390px, a rotated rear view, and a customer meeting, saved under docs/ui-redesign/floorplan-*.png.",
+        "2026-10-24: lint, typecheck, 26 unit tests, optimized production build, and 4 production Playwright scenarios passed. Touch orbit passed 3 repeated runs; no-WebGL touch selection and all five role routes passed."
+      ]
+    }
+  ]
+}

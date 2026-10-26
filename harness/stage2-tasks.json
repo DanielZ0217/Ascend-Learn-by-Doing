@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "scope_status": "approved",
+  "implementation_status": "complete",
+  "scope_confirmed_on": "2026-10-24",
+  "app_root": "web",
+  "baseline_manifest": "harness/tasks.json",
+  "requirements": "docs/STAGE2_PRD.md",
+  "documents": [
+    "AGENTS.md",
+    "README.md",
+    "docs/STATUS.md",
+    "docs/DESIGN_DECISIONS.md",
+    "docs/PRD.md",
+    "docs/STAGE2_PRD.md",
+    "docs/STAGE2_BUILD_PLAN.md",
+    "docs/AGENT_PROCEDURES.md",
+    "docs/AGENT_HARNESS.md"
+  ],
+  "tasks": [
+    {
+      "id": "S2-01",
+      "title": "Shared contracts, participant identity, presence, and scoped storage",
+      "lane": "contracts",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": [],
+      "paths": ["web/src/lib/contracts/", "web/src/lib/stage2/store.ts", "web/src/lib/memory/index.ts", "web/tests/services/stage2-contracts/"],
+      "acceptance": ["S2-AC-01", "S2-AC-03", "S2-AC-04", "S2-AC-13", "S2-AC-14"],
+      "checks": ["Define versioned company, participant, presence, event, thread, artifact, and approval contracts while preserving existing companies.", "Test two-seat identity, invite scope, session expiry, company isolation, and private coaching separation."],
+      "evidence": ["Stage 2 SQLite service stores hashed invite/session credentials and expires presence; web/tests/services/stage2-contracts/stage2.test.ts passed; participant-scoped coach memory assertion passed in web/tests/services/ai/learning.test.ts; typecheck and build passed."]
+    },
+    {
+      "id": "S2-02",
+      "title": "Company setup choices and LAN invite flow",
+      "lane": "setup",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-01"],
+      "paths": ["web/src/app/page.tsx", "web/src/app/api/company/", "web/src/app/api/stage2/join/", "web/src/app/join/[companyId]/", "web/tests/e2e/"],
+      "acceptance": ["S2-AC-01", "S2-AC-02", "S2-AC-03"],
+      "checks": ["Exercise Single/Collaborative, Practice/Real world, Startup/Mature, and bank/restaurant/semiconductor/existing presets without changing the five roles.", "Join by invite in two isolated browser contexts; refuse a third participant and show an actionable invalid/full-link state. The physical-device gate is S2-10."],
+      "evidence": ["Production Playwright passed invite join, two names, and two-seat presence in isolated contexts; fixture HTTP smoke through the LAN address refused a third join and invalid credentials. The physical-device gate remains S2-10."]
+    },
+    {
+      "id": "S2-03",
+      "title": "Company-scoped shared conversation and private chat boundary",
+      "lane": "collaboration",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-01"],
+      "paths": ["web/src/app/api/stage2/", "web/src/lib/stage2/store.ts", "web/src/lib/memory/index.ts", "web/src/components/stage2/", "web/tests/services/stage2-contracts/"],
+      "acceptance": ["S2-AC-04", "S2-AC-06", "S2-AC-14"],
+      "checks": ["Deliver author-labeled student and AI messages once to both clients; retain thread, status, and artifact references.", "Prove one company's thread and each student's private coach history cannot be read through another session."],
+      "evidence": ["Production Playwright delivered an author-labeled PRD to both browser contexts; company-scoped artifact and private participant memory tests passed."]
+    },
+    {
+      "id": "S2-04",
+      "title": "Student support PRD to engineering feature workflow",
+      "lane": "workflow",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-02", "S2-03"],
+      "paths": ["web/src/lib/stage2/store.ts", "web/src/app/api/stage2/", "web/src/components/stage2/", "web/tests/e2e/"],
+      "acceptance": ["S2-AC-05", "S2-AC-06", "S2-AC-12"],
+      "checks": ["Trace issue to student-authored support brief, engineering clarification, student-authored implementation, actual checks, and review in two browser contexts; physical devices are S2-10.", "Switch student roles without changing message authorship or losing work."],
+      "evidence": ["Production Playwright traced support PRD, engineer clarification, support reply, failed and passing checked code attempts, review, and attributed thread artifacts in two isolated browser contexts."]
+    },
+    {
+      "id": "S2-05",
+      "title": "Bounded AI coworker handoffs and approval gateway",
+      "lane": "agent-policy",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-04"],
+      "paths": ["web/src/lib/ai/", "web/src/lib/stage2/store.ts", "web/src/app/api/stage2/", "web/scripts/stage2-smoke.mjs", "web/tests/services/ai/"],
+      "acceptance": ["S2-AC-07", "S2-AC-08", "S2-AC-14", "S2-AC-16"],
+      "checks": ["Test role allowlists, company/task scope, untrusted-content handling, provider fallback, limits, and append-only attribution.", "With approval On, prove Reject blocks delivery and Approve releases exactly one internal handoff; no model message self-approves."],
+      "evidence": ["Fixture smoke passed all five role drafts, twelve-message cap, cross-origin rejection, approval Reject and exactly-once Approve; live rehearsal returned Meta for supervisor, engineering handoff, and Pause task. Policy prompt forbids external action and treats thread text as untrusted."]
+    },
+    {
+      "id": "S2-06",
+      "title": "Company and stage-specific foreground event engine",
+      "lane": "simulation",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-01", "S2-02"],
+      "paths": ["web/src/lib/stage2/events.ts", "web/src/lib/stage2/store.ts", "web/src/app/api/stage2/", "web/tests/services/stage2-contracts/"],
+      "acceptance": ["S2-AC-02", "S2-AC-10", "S2-AC-16"],
+      "checks": ["Compare bank, restaurant, and semiconductor events at Startup and Mature stages; assert roughly five-second shared cadence and no model call on event ticks.", "Test concurrent polls, idempotent event IDs, bounded retained history, and simulated coworker action/outcome logs with accurate provenance."],
+      "evidence": ["Unit tests passed industry/stage variation, all five role seeds per preset, five-second cadence, and 120-event retention; fixture HTTP smoke passed two simultaneous polls with one shared event ID. Event ticks contain no model call."]
+    },
+    {
+      "id": "S2-07",
+      "title": "Shared Pause, presence expiry, and temporary run cleanup",
+      "lane": "simulation",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-06"],
+      "paths": ["web/src/lib/stage2/store.ts", "web/src/app/api/stage2/", "web/src/components/stage2/", "web/tests/services/stage2-contracts/"],
+      "acceptance": ["S2-AC-11", "S2-AC-13", "S2-AC-14"],
+      "checks": ["Two clients observe one Pause/Resume state, including concurrent requests and reconnects.", "After the last participant expires, verify no further events and deletion of temporary run/feed while company and Practice progress survive."],
+      "evidence": ["Production Playwright passed shared Pause and Resume; fixture smoke proved exclusive claim and deleted run/feed after both Leave requests plus expiry grace while messages persisted; unit tests covered paused tick suppression and expired sessions."]
+    },
+    {
+      "id": "S2-08",
+      "title": "Responsive engineering issue and editor split",
+      "lane": "frontend",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-04"],
+      "paths": ["web/src/components/learning/", "web/src/app/company/[companyId]/role/[roleId]/", "web/tests/e2e/"],
+      "acceptance": ["S2-AC-09", "S2-AC-12"],
+      "checks": ["Inspect desktop left issue/right code layout and narrow stacked layout with keyboard and reduced-motion checks.", "Run existing isolated code checks, Submit, feedback, and revision with a workplace feature task."],
+      "evidence": ["Production Playwright verified desktop issue-left/editor-right, 390-pixel stacked layout with no overflow, isolated checks, failed attempt, passing revision, and feedback. Existing keyboard/reduced-motion office paths remained in the regression suite."]
+    },
+    {
+      "id": "S2-09",
+      "title": "Contextual pause task and activity/conversation surfaces",
+      "lane": "integration-ui",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-04", "S2-05", "S2-07", "S2-08"],
+      "paths": ["web/src/components/stage2/", "web/src/lib/ai/learning.ts", "web/src/app/api/stage2/", "web/src/app/api/learning/", "web/tests/e2e/"],
+      "acceptance": ["S2-AC-06", "S2-AC-11", "S2-AC-12", "S2-AC-16"],
+      "checks": ["Pause on a company event, open a role-specific task, submit and receive the relevant real feedback, then resume the shared feed.", "Inspect author/provenance labels, accessible announcements, no focus stealing, loading/retry/fallback states, and both participants' views."],
+      "evidence": ["Production Playwright passed contextual Pause task, revision and Resume in both browser contexts; labels separate simulated outcomes, student work, and AI fixtures. Native artifact dialog supports Escape; new messages announce politely and follow the latest entry without stealing focus."]
+    },
+    {
+      "id": "S2-10",
+      "title": "Two-device integration and single-student regression gate",
+      "lane": "verification",
+      "status": "done",
+      "owner": "/root",
+      "depends_on": ["S2-02", "S2-03", "S2-04", "S2-05", "S2-06", "S2-07", "S2-08", "S2-09"],
+      "paths": ["web/tests/e2e/", "web/tests/services/", "docs/STATUS.md", "docs/STAGE2_BUILD_PLAN.md", "docs/stage2-captures/"],
+      "acceptance": ["S2-AC-03", "S2-AC-05", "S2-AC-08", "S2-AC-10", "S2-AC-11", "S2-AC-13", "S2-AC-14", "S2-AC-15", "S2-AC-16"],
+      "checks": ["Rehearse a mature bank support-to-engineering handoff and shared Pause/Resume on two LAN devices; compare startup restaurant and mature semiconductor variants.", "Verify third-join refusal, approval Reject/Approve, company/privacy isolation, expiry cleanup, provider failure recovery, and baseline single-student learning/voice/retrieval/meeting/coding/review.", "Run lint, typecheck, focused tests, optimized build, production browser flows, and capture representative screenshots."],
+      "evidence": ["Full production Playwright suite passed 5 scenarios with 3 project-inapplicable skips; lint, typecheck, 36 unit tests, optimized build, fixture and live Meta smokes, service checks, both harness checkers, and screenshots passed. On October 25, the physical phone joined a mature-bank Real world company over its hotspot as Daniel. The host observed the support PRD, Daniel's engineering clarification, a shared Pause holding the event count at 48, and Resume advancing it to 49 and 50. The campus Wi-Fi attempt failed before the join form; the successful hotspot test used a four-minute firewall exception limited to the phone IP and TCP port 3000. Bedrock Sonnet remains separately unverified pending a local key."]
+    }
+  ]
+}
